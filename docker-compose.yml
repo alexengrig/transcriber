@@ -1,0 +1,15 @@
+name: transcriber
+
+services:
+  worker:
+    build: .
+    image: transcriber
+    gpus: all
+    environment:
+      # TODO: Put your token from https://huggingface.co/settings/tokens
+#      HF_TOKEN: hf_...
+      HF_HUB_DISABLE_TELEMETRY: 1
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./transcripts:/transcripts
+      - ./videos:/videos
