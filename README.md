@@ -12,7 +12,7 @@ On an RTX 2060 (6GB) with `large-v2`,
    (`.mp4, .mkv, .avi, .mov, .webm, .mp3, .wav, .m4a, .aac, .flac, .ogg, .opus, .wma`)
    into `/videos`.
 
-2. Run `docker compose run --rm worker /videos --formats txt jsonl srt` (optional: `--model medium`):
+2. Run `docker compose run --rm worker /videos --formats txt jsonl srt` (optional: `--model medium`, `--language en`):
 
    ```text
    [INFO] Found 1 file(s).
