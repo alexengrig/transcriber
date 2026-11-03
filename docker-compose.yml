@@ -1,15 +1,36 @@
 name: transcriber
 
+# Put files into ./videos, results appear in ./transcripts.
+#   docker compose run --rm gigaam                       # Russian
+#   docker compose run --rm whisper --language en        # English or any other language
+#   docker compose run --rm whisper                      # auto-detect the language
+# Extra arguments replace the defaults shown under `command:`.
+
+x-common: &common
+  build:
+    context: .
+    args:
+      ENGINES: "whisper gigaam"   # drop one to get a smaller image
+  image: transcriber
+  gpus: all                       # remove on machines without an NVIDIA GPU
+  # Optional: put HF_TOKEN=... into a local, git-ignored .env file.
+  environment:
+    HF_TOKEN: ${HF_TOKEN:-}
+  volumes:
+    - ./videos:/videos:ro
+    - ./transcripts:/transcripts
+    - models:/root/.cache          # downloaded models survive between runs
+
 services:
-  worker:
-    build: .
-    image: transcriber
-    gpus: all
-    environment:
-      # TODO: Put your token from https://huggingface.co/settings/tokens
-#      HF_TOKEN: hf_...
-      HF_HUB_DISABLE_TELEMETRY: 1
-    volumes:
-      - ~/.cache/huggingface:/root/.cache/huggingface
-      - ./transcripts:/transcripts
-      - ./videos:/videos
+  gigaam:
+    <<: *common
+    entrypoint: ["transcriber", "/videos", "--outdir", "/transcripts", "--engine", "gigaam"]
+    command: ["--language", "ru", "--formats", "txt", "srt"]
+
+  whisper:
+    <<: *common
+    entrypoint: ["transcriber", "/videos", "--outdir", "/transcripts", "--engine", "whisper"]
+    command: ["--formats", "txt", "srt"]
+
+volumes:
+  models:
