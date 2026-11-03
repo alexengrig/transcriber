@@ -1,0 +1,66 @@
+[project]
+name = "transcriber"
+version = "0.2.0"
+description = "Local audio/video transcription CLI with pluggable speech-recognition engines"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+# Whisper family through CTranslate2 (multilingual, punctuation, CPU or NVIDIA GPU).
+whisper = [
+    "faster-whisper>=1.2,<2",
+    "av>=11,<16",  # faster-whisper 1.2.x breaks with PyAV 16+
+    "nvidia-cublas-cu12; sys_platform == 'linux'",
+    "nvidia-cudnn-cu12==9.*; sys_platform == 'linux'",
+]
+# GigaAM v3 (Russian, MIT). Long audio is split with Silero VAD, so no
+# Hugging Face token is needed.
+gigaam = [
+    "gigaam",
+    "torch>=2.6",
+    "torchaudio>=2.6",
+    "silero-vad>=6",
+]
+
+[project.scripts]
+transcriber = "transcriber.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.8"]
+
+[tool.uv.sources]
+# CUDA 12 build of torch on Linux: it shares the cuDNN/cuBLAS 12 wheels that
+# faster-whisper (CTranslate2) needs. Mixing torch's CUDA 13 libraries with
+# them overwrites files in nvidia/cudnn and breaks GPU inference.
+torch = { index = "pytorch-cu126", marker = "sys_platform == 'linux'" }
+torchaudio = { index = "pytorch-cu126", marker = "sys_platform == 'linux'" }
+# The PyPI release (0.1.x) is outdated and has no v3 models.
+gigaam = { git = "https://github.com/salute-developers/GigaAM", rev = "7447938d791c4f3e643386ee22c33777004293a5" }
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/transcriber"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
